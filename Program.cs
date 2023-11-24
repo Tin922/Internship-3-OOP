@@ -7,7 +7,7 @@ PhoneBook.Add(new Contact("Mate Matic", "0952134590", Preference.Normal), new Li
 PhoneBook.Add(new Contact("Duje Dujic", "0922114585", Preference.Favorit), new List<Call> 
 {
     { new Call(new DateTime(2001, 11, 11), CallStatus.Missed) },
-    { new Call(new DateTime(2001,11,12) ,CallStatus.Completed)} 
+    { new Call(new DateTime(2001,11,12) ,CallStatus.Current)} 
 }
 );
 
@@ -21,50 +21,23 @@ while (true)
             PrintAllContacts(PhoneBook);
             break;
         case 2:
-            Console.WriteLine("Upisite ime kontakta");
-            string contactName = GetString();
-            Console.WriteLine("Unesite broj kontakta");
-            string contactNumber = GetPhoneNumber(PhoneBook);
-            Console.WriteLine("Unesite preferncu (Favorit, Normal, Blocked)");
-            Preference contactPreference = GetPreference();           
-                PhoneBook.Add(new Contact(contactName, contactNumber, contactPreference), new List <Call>());
+           AddNewContact(PhoneBook);
             break;
         case 3:
-            Console.WriteLine("Upisite ime konakta kojeg zelite izbrisati");
-            string contactNameToDelete = GetString();
-            foreach (var item in PhoneBook)
-            {
-                if (item.Key.nameSurname.ToLower() == contactNameToDelete.ToLower())
-                {
-                    Console.WriteLine($"Kontakt po imenu {item.Key.nameSurname} ce se izbrisati");
-                    PhoneBook.Remove(item.Key);
-                    return;
-                }
-            }
-            Console.WriteLine($"Kontakt s imenom {contactNameToDelete} ne postoji ");
-
+            DeleteContact(PhoneBook);
             break;
         case 4:
-            Console.WriteLine("Upisite ime kontakta kojem zelite promijeniti preferencu");
-            string contactNameToChangePreference = GetString();
-            foreach (var item in PhoneBook)
-            {
-                if (item.Key.nameSurname == contactNameToChangePreference)
-                {
-                    Console.WriteLine("Upisite novu preferencu");
-                    Preference contactNewPreference = GetPreference();
-                    item.Key.PreferenceStatus = contactNewPreference;
-                    Console.WriteLine($"Preferenca je postavljena na {contactNewPreference} za kontakt {item.Key.nameSurname}");
-                }
-            }
+            ChangePreferenceOfContact(PhoneBook);
             break;
         case 5:
             Console.WriteLine("Upisite ime kontakta s kojim zelite upravljati");
             string contactToView = GetString();
+            bool foundContact = false;
             foreach (var item in PhoneBook)
             {
                 if (item.Key.nameSurname.ToLower() == contactToView.ToLower())
                 {
+                    foundContact = true;
                     SubMenu();
                     int choiceForSubMenu = int.Parse(Console.ReadLine());
                     switch (choiceForSubMenu)
@@ -80,7 +53,7 @@ while (true)
                                 hasActiveCall = call.Value.Any(o => o.Status == CallStatus.Current);
                             if(hasActiveCall)
                             {
-                                Console.WriteLine("Postoji vec aktivan poziv. Ne mozete uspostaviti novi poziv dok ne prekinete sadašnji");
+                                Console.WriteLine("Postoji vec aktivan poziv.\nNe mozete uspostaviti novi poziv dok ne prekinete sadašnji");
                                 break;
                             }
                             var response = typeof(CallStatus).GetRandomEnumValue();
@@ -96,25 +69,18 @@ while (true)
                             return;
                     }
                 }
-               
+
             }
+            if (!foundContact)
             Console.WriteLine($"kontakt s imenom {contactToView}");
 
 
             break;
         case 6:
-            foreach(var item in PhoneBook)
-            {
-                Console.WriteLine("Ispis svih poziva za osobu "+ item.Key.nameSurname);
-                foreach(var call in item.Value)
-                    Console.WriteLine($"{call.Status} {call.CallEstablishmentTime}");
-            }
+            PrintAllCalls(PhoneBook);
             break;
-        case 7:  
-          
-            
+        case 7:
             return;
-
         default:
             Console.WriteLine("krivi unos");
             break;
@@ -210,4 +176,54 @@ static void PrintAllContacts(Dictionary<Contact, List<Call>> PhoneBook)
 {
     foreach (var item in PhoneBook)
         Console.WriteLine($"{item.Key.nameSurname} {item.Key.phoneNumber} {item.Key.PreferenceStatus}");
+}
+static void AddNewContact(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    Console.WriteLine("Upisite ime kontakta");
+    string contactName = GetString();
+    Console.WriteLine("Unesite broj kontakta");
+    string contactNumber = GetPhoneNumber(PhoneBook);
+    Console.WriteLine("Unesite preferncu (Favorit, Normal, Blocked)");
+    Preference contactPreference = GetPreference();
+    PhoneBook.Add(new Contact(contactName, contactNumber, contactPreference), new List<Call>());
+    Console.WriteLine("Kontakt je uspjeno dodan");
+}
+static void DeleteContact(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    Console.WriteLine("Upisite ime konakta kojeg zelite izbrisati");
+    string contactNameToDelete = GetString();
+    foreach (var item in PhoneBook)
+    {
+        if (item.Key.nameSurname.ToLower() == contactNameToDelete.ToLower())
+        {
+            Console.WriteLine($"Kontakt po imenu {item.Key.nameSurname} ce se izbrisati");
+            PhoneBook.Remove(item.Key);
+            return;
+        }
+    }
+    Console.WriteLine($"Kontakt s imenom {contactNameToDelete} ne postoji ");
+}
+static void ChangePreferenceOfContact(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    Console.WriteLine("Upisite ime kontakta kojem zelite promijeniti preferencu");
+    string contactNameToChangePreference = GetString();
+    foreach (var item in PhoneBook)
+    {
+        if (item.Key.nameSurname == contactNameToChangePreference)
+        {
+            Console.WriteLine("Upisite novu preferencu");
+            Preference contactNewPreference = GetPreference();
+            item.Key.PreferenceStatus = contactNewPreference;
+            Console.WriteLine($"Preferenca je postavljena na {contactNewPreference} za kontakt {item.Key.nameSurname}");
+        }
+    }
+}
+static void PrintAllCalls(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    foreach (var item in PhoneBook)
+    {
+        Console.WriteLine("Ispis svih poziva za osobu " + item.Key.nameSurname);
+        foreach (var call in item.Value)
+            Console.WriteLine($"{call.Status} {call.CallEstablishmentTime}");
+    }
 }
