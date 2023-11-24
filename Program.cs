@@ -1,4 +1,5 @@
 ﻿using Dump_3_domaci.Classes;
+using System.Linq;
 
 Dictionary<Contact, List<Call>> PhoneBook = new Dictionary<Contact, List<Call>>() { };
 
@@ -17,8 +18,7 @@ while (true)
     switch (choice)
     {
         case 1:
-            foreach (var item in PhoneBook)            
-                Console.WriteLine($"{item.Key.nameSurname} {item.Key.phoneNumber} {item.Key.PreferenceStatus}");
+            PrintAllContacts(PhoneBook);
             break;
         case 2:
             Console.WriteLine("Upisite ime kontakta");
@@ -59,6 +59,50 @@ while (true)
             }
             break;
         case 5:
+            Console.WriteLine("Upisite ime kontakta s kojim zelite upravljati");
+            string contactToView = GetString();
+            foreach (var item in PhoneBook)
+            {
+                if (item.Key.nameSurname.ToLower() == contactToView.ToLower())
+                {
+                    SubMenu();
+                    int choiceForSubMenu = int.Parse(Console.ReadLine());
+                    switch (choiceForSubMenu)
+                    {
+                        case 1:
+                            var sortedCalls = item.Value.OrderBy(o => o.CallEstablishmentTime);
+                            foreach (var call in sortedCalls)
+                                Console.WriteLine(call.CallEstablishmentTime);
+                            break;
+                        case 2:
+                            bool hasActiveCall = false;
+                            foreach (var call in PhoneBook)
+                                hasActiveCall = call.Value.Any(o => o.Status == CallStatus.Current);
+                            if(hasActiveCall)
+                            {
+                                Console.WriteLine("Postoji vec aktivan poziv. Ne mozete uspostaviti novi poziv dok ne prekinete sadašnji");
+                                break;
+                            }
+                            var response = typeof(CallStatus).GetRandomEnumValue();
+                            if (response == CallStatus.Completed)
+                            {
+                                var radnom = new Random();
+                                var durationOfCall = radnom.Next(1, 21);
+                                Thread.Sleep(durationOfCall * 1000);
+                                item.Value.Add(new Call(DateTime.Now, response));
+                            }
+                            break;
+                        case 3:
+                            return;
+                    }
+                }
+               
+            }
+            Console.WriteLine($"kontakt s imenom {contactToView}");
+
+
+            break;
+        case 6:
             foreach(var item in PhoneBook)
             {
                 Console.WriteLine("Ispis svih poziva za osobu "+ item.Key.nameSurname);
@@ -66,7 +110,9 @@ while (true)
                     Console.WriteLine($"{call.Status} {call.CallEstablishmentTime}");
             }
             break;
-        case 6:
+        case 7:  
+          
+            
             return;
 
         default:
@@ -83,9 +129,15 @@ static void Menu()
     Console.WriteLine("2 - Dodavanje novih kontakata");
     Console.WriteLine("3 - Brisanje kontakta iz imenika");
     Console.WriteLine("4 - Editiranje preference kontakta");
-    Console.WriteLine("5 - Editiranje preference kontakta");
-    Console.WriteLine("5 - Ispis svih poziva");
-    Console.WriteLine("5 - Izlaz iz aplikacije");
+    Console.WriteLine("5 - Upravljanje kontaktom");
+    Console.WriteLine("6 - Ispis svih poziva");
+    Console.WriteLine("7 - Izlaz iz aplikacije");
+}
+static void SubMenu()
+{
+    Console.WriteLine("1 - Ispis svih poziva sa tim konaktom");
+    Console.WriteLine("2 - Kreiranje novog poziva");
+    Console.WriteLine("3 - Izlaz iz podmenua");
 }
 
 static string GetPhoneNumber(Dictionary<Contact, List<Call>> PhoneBook)
@@ -153,4 +205,9 @@ static Preference GetPreference()
     } while (!Enum.TryParse(userInput, true, out userInput2) || (userInput2 != Preference.Favorit && userInput2 != Preference.Blocked && userInput2 != Preference.Normal));
 
     return userInput2;
+}
+static void PrintAllContacts(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    foreach (var item in PhoneBook)
+        Console.WriteLine($"{item.Key.nameSurname} {item.Key.phoneNumber} {item.Key.PreferenceStatus}");
 }

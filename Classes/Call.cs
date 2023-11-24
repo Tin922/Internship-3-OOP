@@ -1,4 +1,6 @@
 ﻿
+using System.Runtime.CompilerServices;
+
 namespace Dump_3_domaci.Classes
 {
     public enum CallStatus
@@ -6,6 +8,16 @@ namespace Dump_3_domaci.Classes
         Current,
         Missed,
         Completed,
+    }
+    public static class EnumExtensions
+    {
+        public static CallStatus GetRandomEnumValue(this Type t)
+        {
+            return CallStatus.GetValues(t)
+                .OfType<CallStatus>()
+                .OrderBy(e => Guid.NewGuid())
+                .FirstOrDefault();
+        }
     }
     internal class Call
     {
