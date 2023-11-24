@@ -14,7 +14,7 @@ PhoneBook.Add(new Contact("Duje Dujic", "0922114585", Preference.Favorit), new L
 while (true)
 {
     Menu();
-    int choice =int.Parse(Console.ReadLine());
+    int choice = GetInt();
     switch (choice)
     {
         case 1:
@@ -30,51 +30,7 @@ while (true)
             ChangePreferenceOfContact(PhoneBook);
             break;
         case 5:
-            Console.WriteLine("Upisite ime kontakta s kojim zelite upravljati");
-            string contactToView = GetString();
-            bool foundContact = false;
-            foreach (var item in PhoneBook)
-            {
-                if (item.Key.nameSurname.ToLower() == contactToView.ToLower())
-                {
-                    foundContact = true;
-                    SubMenu();
-                    int choiceForSubMenu = int.Parse(Console.ReadLine());
-                    switch (choiceForSubMenu)
-                    {
-                        case 1:
-                            var sortedCalls = item.Value.OrderBy(o => o.CallEstablishmentTime);
-                            foreach (var call in sortedCalls)
-                                Console.WriteLine(call.CallEstablishmentTime);
-                            break;
-                        case 2:
-                            bool hasActiveCall = false;
-                            foreach (var call in PhoneBook)
-                                hasActiveCall = call.Value.Any(o => o.Status == CallStatus.Current);
-                            if(hasActiveCall)
-                            {
-                                Console.WriteLine("Postoji vec aktivan poziv.\nNe mozete uspostaviti novi poziv dok ne prekinete sadašnji");
-                                break;
-                            }
-                            var response = typeof(CallStatus).GetRandomEnumValue();
-                            if (response == CallStatus.Completed)
-                            {
-                                var radnom = new Random();
-                                var durationOfCall = radnom.Next(1, 21);
-                                Thread.Sleep(durationOfCall * 1000);
-                                item.Value.Add(new Call(DateTime.Now, response));
-                            }
-                            break;
-                        case 3:
-                            return;
-                    }
-                }
-
-            }
-            if (!foundContact)
-            Console.WriteLine($"kontakt s imenom {contactToView}");
-
-
+            CallManagement(PhoneBook);
             break;
         case 6:
             PrintAllCalls(PhoneBook);
@@ -82,7 +38,7 @@ while (true)
         case 7:
             return;
         default:
-            Console.WriteLine("krivi unos");
+            Console.WriteLine("Ne postoji ta opcija");
             break;
 
     }
@@ -152,11 +108,23 @@ static bool IsNumeric(string input)
 {
     return double.TryParse(input, out _);
 }
-static void GetInt()
+static int GetInt()
 {
+    while (true)
+    {
+        string userInput = Console.ReadLine();
 
+        if (int.TryParse(userInput, out int result))
+        {
+            return result;
+        }
+        else
+        {
+            Console.WriteLine("Unesite broj");
+        }
+    }
 }
-static Preference GetPreference()
+    static Preference GetPreference()
 {
     string userInput;
     Preference userInput2;
@@ -226,4 +194,80 @@ static void PrintAllCalls(Dictionary<Contact, List<Call>> PhoneBook)
         foreach (var call in item.Value)
             Console.WriteLine($"{call.Status} {call.CallEstablishmentTime}");
     }
+}
+static void CallManagement(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    Console.WriteLine("Upisite ime kontakta s kojim zelite upravljati");
+    string contactToView = GetString();
+    bool foundContact = false;
+    foreach (var item in PhoneBook)
+    {
+        if (item.Key.nameSurname.ToLower() == contactToView.ToLower())
+        {
+            
+            while (true) 
+            {
+                foundContact = true;
+                SubMenu();
+                int choiceForSubMenu = GetInt();
+                switch (choiceForSubMenu)
+                {
+                    case 1:
+                        var sortedCalls = item.Value.OrderBy(o => o.CallEstablishmentTime);
+                        foreach (var call in sortedCalls)
+                            Console.WriteLine($"{call.CallEstablishmentTime} {call.Status}");
+                        break;
+                    case 2:
+                        bool hasActiveCall = false;
+                        bool isBlocked = false;
+                        foreach (var call in PhoneBook)
+                        {
+                            hasActiveCall = call.Value.Any(o => o.Status == CallStatus.Current);
+                            isBlocked = call.Key.PreferenceStatus == Preference.Blocked;
+                        }
+                        if (hasActiveCall)
+                        {
+                            Console.WriteLine("Postoji vec aktivan poziv.\nNe mozete uspostaviti novi poziv dok ne prekinete sadašnji");
+                            break;
+                        }
+                        if (isBlocked)
+                        {
+                            Console.WriteLine("Kontakt je blokiran\nNe mozete uspostaviti poziv s njim");
+                            break;
+                        }
+                        var response = typeof(CallStatus).GetRandomEnumValue();
+                        if (response == CallStatus.Completed)
+                        {
+                            var radnom = new Random();
+                            var durationOfCall = radnom.Next(1, 21);
+                            Console.WriteLine("Poziv je u tijeku...");
+                            Thread.Sleep(durationOfCall * 1000);
+                            item.Value.Add(new Call(DateTime.Now, response));
+                            Console.WriteLine("Poziv je završio");
+                        }
+                        else if (response == CallStatus.Missed)
+                        {
+                            Console.WriteLine("Poziv je propusten"); 
+                            item.Value.Add(new Call(DateTime.Now, response));
+                        }
+                        else
+                        {
+                            Console.WriteLine("Poziv je aktivan");
+                            item.Value.Add(new Call(DateTime.Now, response));
+
+                        }
+                        break;
+
+
+                    case 3:
+                        return;
+                }
+            }
+        }
+
+    }
+    if (!foundContact)
+        Console.WriteLine($"kontakt s imenom {contactToView} ne postoji");
+
+
 }
