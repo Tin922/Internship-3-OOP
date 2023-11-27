@@ -289,7 +289,9 @@ static void EndPhoneCall(Dictionary<Contact, List<Call>> PhoneBook)
             {
                 call.Status = CallStatus.Completed;
                 Console.WriteLine($"Poziv s osobom {contact.Key.nameSurname} je prekinut");
+                return;
             }
         }
     }
+    Console.WriteLine("Nema poziva koji je u tijeku");
 }
