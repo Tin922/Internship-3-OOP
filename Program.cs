@@ -59,7 +59,8 @@ static void SubMenu()
 {
     Console.WriteLine("1 - Ispis svih poziva sa tim konaktom");
     Console.WriteLine("2 - Kreiranje novog poziva");
-    Console.WriteLine("3 - Izlaz iz podmenua");
+    Console.WriteLine("3 - Preknite sadašnji aktivni poziv");
+    Console.WriteLine("4 - Izlaz iz podmenua");
 }
 
 static string GetPhoneNumber(Dictionary<Contact, List<Call>> PhoneBook)
@@ -75,7 +76,7 @@ static string GetPhoneNumber(Dictionary<Contact, List<Call>> PhoneBook)
         {
             if (item.Key.phoneNumber == userInput)
             {
-                Console.WriteLine("Taj broj vec postoji");
+                Console.WriteLine("Taj broj vec postoji\nUnesite neki drugi broj");
                 numberExists= true;
             }
         }
@@ -179,12 +180,14 @@ static void ChangePreferenceOfContact(Dictionary<Contact, List<Call>> PhoneBook)
     {
         if (item.Key.nameSurname == contactNameToChangePreference)
         {
-            Console.WriteLine("Upisite novu preferencu");
+            Console.WriteLine("Upisite novu preferencu (Favorit, Blocked ili Normal)");
             Preference contactNewPreference = GetPreference();
             item.Key.PreferenceStatus = contactNewPreference;
             Console.WriteLine($"Preferenca je postavljena na {contactNewPreference} za kontakt {item.Key.nameSurname}");
+            return;
         }
     }
+    Console.WriteLine($"Kontakt s imenom {contactNameToChangePreference} ne postoji");
 }
 static void PrintAllCalls(Dictionary<Contact, List<Call>> PhoneBook)
 {
@@ -213,7 +216,7 @@ static void CallManagement(Dictionary<Contact, List<Call>> PhoneBook)
                 switch (choiceForSubMenu)
                 {
                     case 1:
-                        var sortedCalls = item.Value.OrderBy(o => o.CallEstablishmentTime);
+                        var sortedCalls = item.Value.OrderByDescending(o => o.CallEstablishmentTime);
                         foreach (var call in sortedCalls)
                             Console.WriteLine($"{call.CallEstablishmentTime} {call.Status}");
                         break;
@@ -258,9 +261,14 @@ static void CallManagement(Dictionary<Contact, List<Call>> PhoneBook)
                         }
                         break;
 
-
                     case 3:
+                        EndPhoneCall(PhoneBook);
+                        break;
+
+                    case 4:
+                        Console.Clear();
                         return;
+                    
                 }
             }
         }
@@ -270,4 +278,18 @@ static void CallManagement(Dictionary<Contact, List<Call>> PhoneBook)
         Console.WriteLine($"kontakt s imenom {contactToView} ne postoji");
 
 
+}
+static void EndPhoneCall(Dictionary<Contact, List<Call>> PhoneBook)
+{
+    foreach(var contact in PhoneBook)
+    {
+        foreach(var call in contact.Value)
+        {
+            if(call.Status == CallStatus.Current)
+            {
+                call.Status = CallStatus.Completed;
+                Console.WriteLine($"Poziv s osobom {contact.Key.nameSurname} je prekinut");
+            }
+        }
+    }
 }
